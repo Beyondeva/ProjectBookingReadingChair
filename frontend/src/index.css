@@ -172,10 +172,6 @@ button {
 
 /* ── Bottom Navigation (mobile only) ──────────── */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   height: var(--bottom-nav-height);
   background: var(--bg-white);
   border-top: 1px solid var(--border);
@@ -183,8 +179,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0;
-  z-index: 100;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  margin-top: auto;
 }
 
 .bottom-nav__item {
@@ -996,17 +992,8 @@ button {
     border-radius: 0;
   }
 
-  /* Hide bottom nav on desktop — top navbar has Logout */
-  .bottom-nav {
-    display: none;
-  }
-
-  .btn-logout {
-    display: inline-flex;
-  }
-
   .page {
-    padding: 2rem 3rem 2rem;
+    padding: 2rem 3rem 1rem;
   }
 
   /* Wider seat grid on desktop */
@@ -1088,19 +1075,6 @@ button {
 }
 
 /* ============================================================
-   RESPONSIVE — Mobile (≤767px) — show bottom nav
-   ============================================================ */
-@media (max-width: 767px) {
-  .btn-logout {
-    display: none;
-  }
-
-  .page {
-    padding-bottom: calc(var(--bottom-nav-height) + 0.75rem);
-  }
-}
-
-/* ============================================================
    RESPONSIVE — Mobile (≤480px)
    ============================================================ */
 @media (max-width: 480px) {
@@ -1122,7 +1096,7 @@ button {
   }
 
   .page {
-    padding: 1rem 0.75rem calc(var(--bottom-nav-height) + 0.75rem);
+    padding: 1rem 0.75rem 1rem;
   }
 
   .login-card {
