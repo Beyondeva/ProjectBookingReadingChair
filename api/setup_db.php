@@ -11,12 +11,23 @@ header('Content-Type: text/html; charset=utf-8');
 echo "<h1>🪑 NU SeatFinder — Database Setup</h1><pre>\n";
 
 try {
-    // Connect using Railway env vars
-    $host = getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost';
-    $port = getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306';
-    $db = getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'nuseatfinder';
-    $user = getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root';
-    $pass = getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '12345678a';
+    // Parse Railway MYSQL_PUBLIC_URL or use individual env vars
+    $url = getenv('MYSQL_PUBLIC_URL') ?: getenv('MYSQL_URL') ?: '';
+
+    if ($url) {
+        $parsed = parse_url($url);
+        $host = $parsed['host'];
+        $port = $parsed['port'] ?? 3306;
+        $db = ltrim($parsed['path'], '/');
+        $user = $parsed['user'];
+        $pass = $parsed['pass'] ?? '';
+    } else {
+        $host = getenv('MYSQLHOST') ?: 'localhost';
+        $port = getenv('MYSQLPORT') ?: '3306';
+        $db = getenv('MYSQLDATABASE') ?: 'nuseatfinder';
+        $user = getenv('MYSQLUSER') ?: 'root';
+        $pass = getenv('MYSQLPASSWORD') ?: '12345678a';
+    }
 
     echo "Connecting to $host:$port as $user...\n";
 

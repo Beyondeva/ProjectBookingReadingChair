@@ -1,7 +1,7 @@
 <?php
 /**
  * db_connect.php — Database connection + helpers
- * Supports both localhost (AppServ) and Railway deployment
+ * Supports: Railway MYSQL_PUBLIC_URL, individual env vars, and localhost
  */
 
 /* ── CORS ────────────────────────────────────── */
@@ -9,8 +9,6 @@ $allowed_origins = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 ];
-
-// Allow Railway frontend domain via env var
 if (getenv('FRONTEND_URL')) {
     $allowed_origins[] = rtrim(getenv('FRONTEND_URL'), '/');
 }
@@ -21,7 +19,7 @@ if (in_array($origin, $allowed_origins)) {
 } else if (getenv('FRONTEND_URL')) {
     header("Access-Control-Allow-Origin: " . rtrim(getenv('FRONTEND_URL'), '/'));
 } else {
-    header("Access-Control-Allow-Origin: http://localhost:5173");
+    header("Access-Control-Allow-Origin: *");
 }
 
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -36,12 +34,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 /* ── Database Connection ─────────────────────── */
 function getDB()
 {
-    // Railway provides these env vars automatically when MySQL is added
-    $host = getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost';
-    $port = getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306';
-    $db = getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'nuseatfinder';
-    $user = getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root';
-    $pass = getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '12345678a';
+    // Option 1: Parse MYSQL_PUBLIC_URL or MYSQL_URL (Railway connection string)
+    $url = getenv('MYSQL_PUBLIC_URL') ?: getenv('MYSQL_URL') ?: '';
+
+    if ($url) {
+        $parsed = parse_url($url);
+        $host = $parsed['host'];
+        $port = $parsed['port'] ?? 3306;
+        $user = $parsed['user'];
+        $pass = $parsed['pass'] ?? '';
+        $db = ltrim($parsed['path'], '/');
+    } else {
+        // Option 2: Individual env vars (Railway reference vars or localhost)
+        $host = getenv('MYSQLHOST') ?: 'localhost';
+        $port = getenv('MYSQLPORT') ?: '3306';
+        $db = getenv('MYSQLDATABASE') ?: 'nuseatfinder';
+        $user = getenv('MYSQLUSER') ?: 'root';
+        $pass = getenv('MYSQLPASSWORD') ?: '12345678a';
+    }
 
     $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
     $pdo = new PDO($dsn, $user, $pass, [
