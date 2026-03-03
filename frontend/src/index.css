@@ -996,8 +996,17 @@ button {
     border-radius: 0;
   }
 
+  /* Hide bottom nav on desktop — top navbar has Logout */
+  .bottom-nav {
+    display: none;
+  }
+
+  .btn-logout {
+    display: inline-flex;
+  }
+
   .page {
-    padding: 2rem 3rem calc(var(--bottom-nav-height) + 1rem);
+    padding: 2rem 3rem 2rem;
   }
 
   /* Wider seat grid on desktop */
@@ -1060,7 +1069,7 @@ button {
    ============================================================ */
 @media (min-width: 1024px) {
   .page {
-    padding: 2rem 4rem;
+    padding: 2rem 4rem 2rem;
   }
 
   /* Even wider seat grid */
@@ -1075,6 +1084,19 @@ button {
 
   .active-booking {
     padding: 1.25rem 1.5rem;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile (≤767px) — show bottom nav
+   ============================================================ */
+@media (max-width: 767px) {
+  .btn-logout {
+    display: none;
+  }
+
+  .page {
+    padding-bottom: calc(var(--bottom-nav-height) + 0.75rem);
   }
 }
 
