@@ -1,7 +1,7 @@
 FROM php:7.4-apache
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Fix: disable conflicting MPM modules, keep only mpm_prefork
+RUN a2dismod mpm_event mpm_worker 2>/dev/null; a2enmod mpm_prefork rewrite
 
 # Install MySQL PDO extension
 RUN docker-php-ext-install pdo pdo_mysql
@@ -12,8 +12,9 @@ COPY api/ /var/www/html/
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Expose port (Railway uses PORT env var)
+# Railway uses PORT env var — configure Apache to listen on $PORT
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
+
 EXPOSE 80
 
-# Apache runs on port 80 by default, Railway maps it
 CMD ["apache2-foreground"]
