@@ -1,47 +1,57 @@
 <?php
 /**
- * db_connect.php — Database connection & CORS helper
- * NU SeatFinder API
+ * db_connect.php — Database connection + helpers
+ * Supports both localhost (AppServ) and Railway deployment
  */
 
-// CORS headers — allow React dev server
-header('Access-Control-Allow-Origin: *');
+/* ── CORS ────────────────────────────────────── */
+$allowed_origins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+];
+
+// Allow Railway frontend domain via env var
+if (getenv('FRONTEND_URL')) {
+    $allowed_origins[] = rtrim(getenv('FRONTEND_URL'), '/');
+}
+
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else if (getenv('FRONTEND_URL')) {
+    header("Access-Control-Allow-Origin: " . rtrim(getenv('FRONTEND_URL'), '/'));
+} else {
+    header("Access-Control-Allow-Origin: http://localhost:5173");
+}
+
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=utf-8');
 
-// Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
 
-// Database credentials (AppServ default)
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'nuseatfinder');
-define('DB_USER', 'root');
-define('DB_PASS', '12345678a');
-
-/**
- * Get a PDO connection instance
- */
+/* ── Database Connection ─────────────────────── */
 function getDB()
 {
-    static $pdo = null;
-    if ($pdo === null) {
-        $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
-    }
+    // Railway provides these env vars automatically when MySQL is added
+    $host = getenv('MYSQLHOST') ?: getenv('DB_HOST') ?: 'localhost';
+    $port = getenv('MYSQLPORT') ?: getenv('DB_PORT') ?: '3306';
+    $db = getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: 'nuseatfinder';
+    $user = getenv('MYSQLUSER') ?: getenv('DB_USER') ?: 'root';
+    $pass = getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '12345678a';
+
+    $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
+    $pdo = new PDO($dsn, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
     return $pdo;
 }
 
-/**
- * Send a JSON response and exit
- */
+/* ── Helpers ──────────────────────────────────── */
 function jsonResponse($data, $code = 200)
 {
     http_response_code($code);
@@ -49,9 +59,6 @@ function jsonResponse($data, $code = 200)
     exit;
 }
 
-/**
- * Read JSON body from POST request
- */
 function getJsonBody()
 {
     $raw = file_get_contents('php://input');

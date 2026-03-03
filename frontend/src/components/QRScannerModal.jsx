@@ -1,13 +1,14 @@
 /**
  * QRScannerModal.jsx — Real QR Code for seat check-in
- * NU SeatFinder — Orange/White Design
+ * Uses API_BASE for Railway-compatible QR URLs
  */
 import { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { API_BASE } from '../api';
 
 function getCheckInUrl(bookingId) {
-    const host = window.location.hostname;
-    return `http://${host}/PJBOOKING/api/qr_checkin.php?token=${bookingId}`;
+    // Use API_BASE which already points to the correct server (Railway or localhost)
+    return `${API_BASE}/qr_checkin.php?token=${bookingId}`;
 }
 
 export default function QRScannerModal({ booking, onConfirm, onClose }) {
@@ -18,8 +19,6 @@ export default function QRScannerModal({ booking, onConfirm, onClose }) {
     // Poll to detect when phone scan completes the check-in
     useEffect(() => {
         if (!booking || checkedIn) return;
-
-        const API_BASE = `http://${window.location.hostname}/PJBOOKING/api`;
 
         pollRef.current = setInterval(async () => {
             try {
@@ -59,7 +58,6 @@ export default function QRScannerModal({ booking, onConfirm, onClose }) {
                             <strong>{booking?.seat_label}</strong>
                         </p>
 
-                        {/* Real QR Code */}
                         <div className="modal__qr-box">
                             <QRCodeSVG
                                 value={checkInUrl}
@@ -78,7 +76,6 @@ export default function QRScannerModal({ booking, onConfirm, onClose }) {
                             />
                         </div>
 
-                        {/* URL hint */}
                         <p style={{
                             fontSize: '0.65rem',
                             color: 'var(--text-muted)',
@@ -91,7 +88,6 @@ export default function QRScannerModal({ booking, onConfirm, onClose }) {
                             {checkInUrl}
                         </p>
 
-                        {/* Waiting */}
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',

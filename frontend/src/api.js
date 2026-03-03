@@ -1,17 +1,21 @@
 /**
- * api.js — Centralized API helper for NU SeatFinder
- * All calls target the PHP back-end served by AppServ.
+ * api.js — Centralized API helper
+ * Auto-detects Railway vs localhost based on environment
  */
 
-const API_BASE = 'http://localhost/PJBOOKING/api';
+// In production (Railway), VITE_API_URL should point to the PHP service
+// In dev, it defaults to localhost AppServ
+const API_BASE = import.meta.env.VITE_API_URL
+  || `http://${window.location.hostname}/PJBOOKING/api`;
 
 async function request(endpoint, options = {}) {
-  const res = await fetch(`${API_BASE}/${endpoint}`, {
+  const url = `${API_BASE}/${endpoint}`;
+  const res = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
   const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Unknown error');
+  if (!data.success) throw new Error(data.error || 'Request failed');
   return data;
 }
 
@@ -42,19 +46,19 @@ export const bookSeat = (seat_id, user_id) =>
     body: JSON.stringify({ seat_id, user_id }),
   });
 
-/* ── Check-in (QR) ────────────────────────────── */
 export const checkIn = (booking_id) =>
   request('check_in.php', {
     method: 'POST',
     body: JSON.stringify({ booking_id }),
   });
 
-/* ── Leave / Cancel ───────────────────────────── */
 export const leaveSeat = (booking_id) =>
   request('leave_seat.php', {
     method: 'POST',
     body: JSON.stringify({ booking_id }),
   });
 
-/* ── Expire ghost bookings ────────────────────── */
 export const cancelExpired = () => request('cancel_expired.php');
+
+// Export API_BASE for use in QR code generation
+export { API_BASE };
